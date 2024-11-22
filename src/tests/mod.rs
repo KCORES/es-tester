@@ -31,8 +31,13 @@ impl CpuTester {
         let instruction_sets = instruction_sets::get_instruction_sets();
         
         for inst_set in instruction_sets {
+            // First print what we're about to test
+            println!("Testing {}...", inst_set.name);
+            
+            // Execute the test
             let (success, duration) = executor::execute_test(&inst_set)?;
             
+            // Store the result
             self.test_results.push(TestResult {
                 instruction_set: inst_set.name.clone(),
                 success,
@@ -40,13 +45,14 @@ impl CpuTester {
                 error_message: if success { None } else { Some("Test failed".to_string()) },
             });
             
-            // 打印实时结果
+            // Print the result after completion
             println!(
-                "Testing {}: {} (took {:?})",
+                "Result for {}: {} (took {:?})",
                 inst_set.name,
                 if success { "PASS" } else { "FAIL" },
                 duration
             );
+            println!("----------------------------------------");
         }
         
         Ok(())
