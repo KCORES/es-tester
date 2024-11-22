@@ -8,11 +8,7 @@ pub enum CpuVendor {
 #[derive(Debug, Clone, Copy)]
 pub enum CpuGeneration {
     // Intel
-    Skylake,
-    CoffeeLake,
-    // AMD
-    Zen2,
-    Zen3,
+    XeonV2,
     Unknown,
 }
 

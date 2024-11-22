@@ -28,7 +28,27 @@ impl CpuTester {
     }
 
     pub fn run_tests(&mut self) -> Result<(), Box<dyn Error>> {
-        // TODO: Implement test execution logic
+        let instruction_sets = instruction_sets::get_instruction_sets();
+        
+        for inst_set in instruction_sets {
+            let (success, duration) = executor::execute_test(&inst_set)?;
+            
+            self.test_results.push(TestResult {
+                instruction_set: inst_set.name.clone(),
+                success,
+                execution_time: duration,
+                error_message: if success { None } else { Some("Test failed".to_string()) },
+            });
+            
+            // 打印实时结果
+            println!(
+                "Testing {}: {} (took {:?})",
+                inst_set.name,
+                if success { "PASS" } else { "FAIL" },
+                duration
+            );
+        }
+        
         Ok(())
     }
 
