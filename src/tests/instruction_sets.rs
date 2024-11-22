@@ -7,7 +7,7 @@ pub struct InstructionSet {
     pub test_function: fn() -> bool,
 }
 
-// 算术运算指令测试
+// Arithmetic instruction tests
 unsafe fn test_add() -> bool {
     let mut result: u32;
     let a: u32 = 10;
@@ -85,7 +85,7 @@ unsafe fn test_div() -> bool {
     quotient == (dividend / divisor) && remainder == (dividend % divisor)
 }
 
-// 逻辑运算指令测试
+// Logical operation instruction tests
 unsafe fn test_and() -> bool {
     let mut result: u32;
     let a: u32 = 0xFF00;
@@ -137,7 +137,7 @@ unsafe fn test_xor() -> bool {
     result == (a ^ b)
 }
 
-// 移位指令测试
+// Shift instruction tests
 unsafe fn test_shl() -> bool {
     let mut result: u32;
     let a: u32 = 0x1;
@@ -156,7 +156,7 @@ unsafe fn test_shl() -> bool {
     result == (a << count)
 }
 
-// 比较指令测试
+// Compare instruction tests
 unsafe fn test_cmp() -> bool {
     let mut flags: u64;
     let a: u32 = 20;
@@ -172,7 +172,7 @@ unsafe fn test_cmp() -> bool {
         out(reg) flags,
     );
     
-    // 检查ZF标志位（相等时ZF=1）
+    // Check ZF flag (ZF=1 when equal)
     (flags & 0x40) != 0
 }
 
@@ -191,32 +191,35 @@ unsafe fn test_test() -> bool {
         out(reg) flags,
     );
     
-    // 检查结果是否正确（有共同的1位时ZF=0）
+    // Check if result is correct (ZF=0 when common 1 bits exist)
     (flags & 0x40) == 0
 }
 
-// 字符串操作指令测试
+// String operation instruction tests
 unsafe fn test_movs() -> bool {
-    let src: [u8; 4] = [1, 2, 3, 4];
-    let dst: [u8; 4] = [0; 4];
+    #[repr(align(4))]
+    struct AlignedBytes([u8; 4]);
+    
+    let src = AlignedBytes([1, 2, 3, 4]);
+    let mut dst = AlignedBytes([0; 4]);
     
     asm!(
         "cld",
-        "mov esi, {0:e}",
-        "mov edi, {1:e}",
+        "mov rsi, {0}",      // Use 64-bit register rsi
+        "mov rdi, {1}",      // Use 64-bit register rdi
         "mov ecx, 4",
         "rep movsb",
-        in(reg) &src,
-        in(reg) &dst,
+        in(reg) src.0.as_ptr(),
+        in(reg) dst.0.as_mut_ptr(),
         out("ecx") _,
-        out("esi") _,
-        out("edi") _,
+        out("rsi") _,
+        out("rdi") _,
     );
     
-    dst == src
+    dst.0 == src.0
 }
 
-// 标志位操作指令测试
+// Flag operation instruction tests
 unsafe fn test_flags() -> bool {
     let mut flags_after_stc: u64;
     let mut flags_after_clc: u64;
@@ -232,13 +235,13 @@ unsafe fn test_flags() -> bool {
         out(reg) flags_after_clc,
     );
     
-    // 检查CF标志位
+    // Check CF flag
     (flags_after_stc & 1) == 1 && (flags_after_clc & 1) == 0
 }
 
 pub fn get_instruction_sets() -> Vec<InstructionSet> {
     let sets = vec![
-        // 算术运算指令
+        // Arithmetic instructions
         InstructionSet {
             name: String::from("ADD"),
             description: String::from("Basic integer addition"),
@@ -259,7 +262,7 @@ pub fn get_instruction_sets() -> Vec<InstructionSet> {
             description: String::from("Unsigned division"),
             test_function: || unsafe { test_div() },
         },
-        // 逻辑运算指令
+        // Logical operation instructions
         InstructionSet {
             name: String::from("AND"),
             description: String::from("Logical AND operation"),
@@ -275,31 +278,31 @@ pub fn get_instruction_sets() -> Vec<InstructionSet> {
             description: String::from("Logical XOR operation"),
             test_function: || unsafe { test_xor() },
         },
-        // 移位指令
+        // Shift instructions
         InstructionSet {
             name: String::from("SHL"),
             description: String::from("Shift left"),
             test_function: || unsafe { test_shl() },
         },
-        // 比较指令
+        // Compare instructions
         InstructionSet {
             name: String::from("CMP"),
             description: String::from("Compare two values"),
             test_function: || unsafe { test_cmp() },
         },
-        // 测试指令
+        // Test instructions
         InstructionSet {
             name: String::from("TEST"),
             description: String::from("Logical compare"),
             test_function: || unsafe { test_test() },
         },
-        // 字符串操作指令
+        // String operation instructions
         InstructionSet {
             name: String::from("MOVS"),
             description: String::from("Move string"),
             test_function: || unsafe { test_movs() },
         },
-        // 标志位操作指令
+        // Flag operation instructions
         InstructionSet {
             name: String::from("FLAGS"),
             description: String::from("Flags operations (STC/CLC)"),
